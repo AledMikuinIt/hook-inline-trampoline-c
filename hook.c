@@ -4,7 +4,8 @@
 void *trampoline = NULL;
 SIZE_T patchSize = 8; // 5 7 8 bytes works
 
-static const char msg[] = "Hooked\n";
+static const char msg[] = "Hooked %d\n";
+static int i = 0;
 
 __attribute__((naked))
 void Hook()
@@ -13,27 +14,29 @@ void Hook()
         ".intel_syntax noprefix\n"
 
         // 32 bytes shadow space + align 16
-        "sub  rsp, 0x28\n"
+        "sub  rsp, 0x40\n"
+
+        "inc  DWORD PTR i[rip]\n"
 
         // sauvegarder les arguments de la fonction hookée
-        "mov  [rsp+0x00], rcx\n"
-        "mov  [rsp+0x08], rdx\n"
-        "mov  [rsp+0x10], r8\n"
-        "mov  [rsp+0x18], r9\n"
+        "mov  [rsp+0x20], rcx\n"
+        "mov  [rsp+0x28], rdx\n"
+        "mov  [rsp+0x30], r8\n"
+        "mov  [rsp+0x38], r9\n"
 
         // printf(\"Hooked\n\")
         "lea  rcx, msg[rip]\n"
+        "mov  edx, DWORD PTR i[rip]\n"
         "xor  eax, eax\n"
         "call printf\n"
 
         // restaurer les arguments d'origine
-        "mov  rcx, [rsp+0x00]\n"
-        "mov  rdx, [rsp+0x08]\n"
-        "lea  rdx, msg[rip]\n" // modifier le 2e arg qui est lpText, on mets message mais bon oklm
-        "mov  r8,  [rsp+0x10]\n"
-        "mov  r9,  [rsp+0x18]\n"
+        "mov  rcx, [rsp+0x20]\n"
+        "mov  rdx, [rsp+0x28]\n"
+        "mov  r8,  [rsp+0x30]\n"
+        "mov  r9,  [rsp+0x38]\n"
 
-        "add  rsp, 0x28\n"
+        "add  rsp, 0x40\n"
 
         // sauter vers le trampoline
         "mov  rax, QWORD PTR trampoline[rip]\n"
