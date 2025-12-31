@@ -13,7 +13,7 @@ void Hook()
     __asm__ __volatile__(
         ".intel_syntax noprefix\n"
 
-        // 32 bytes shadow space + align 16
+        // 32 bytes shadow space + 32 pour save nos args/registres
         "sub  rsp, 0x40\n"
 
         "inc  DWORD PTR i[rip]\n"
@@ -26,7 +26,7 @@ void Hook()
 
         // printf(\"Hooked\n\")
         "lea  rcx, msg[rip]\n"
-        "mov  edx, DWORD PTR i[rip]\n"
+        "mov  edx, i[rip]\n"
         "xor  eax, eax\n"
         "call printf\n"
 
@@ -39,7 +39,7 @@ void Hook()
         "add  rsp, 0x40\n"
 
         // sauter vers le trampoline
-        "mov  rax, QWORD PTR trampoline[rip]\n"
+        "mov  rax, trampoline[rip]\n"
         "jmp  rax\n"
 
         ".att_syntax prefix\n"
